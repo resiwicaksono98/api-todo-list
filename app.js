@@ -1,25 +1,25 @@
 const express = require('express')
-const res = require('express/lib/response')
+const logger = require('morgan')
+const taskRoutes = require('./src/routes/task')
+const taskRoutesv2 = require('./src/routes/taskv2')
+const path = require('path')
+const cors = require('cors')
 
 
 const app = express()
-const taskRoutes = require('./src/routes/task')
+app.use(cors())
+app.use(logger('dev'))
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use('/public', express.static(path.join(__dirname, 'uploads')))
+app.use('/api/v1/', taskRoutes)
+app.use('/api/v2/', taskRoutesv2)
 
-app.use(taskRoutes)
-app.get('/', (req,res,next) => {
-    res.status(201).json({
-        message: 'List Api',
-        data: {
-            1: '/task',
-            2: '/task/:bab'
-        }
-    })
-})
 
-app.get('*',(req,res,next) => {
+app.get('*', (req, res, next) => {
     res.status(404).send({
         message: 'Status 404 Page Not Found'
     })
 })
 
-app.listen(process.env.PORT || 5000, () => console.log('Running in http://localhost:4000'))
+app.listen(process.env.PORT || 5000, () => console.log('Running in http://localhost:5000'))

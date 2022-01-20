@@ -1,36 +1,15 @@
 const express = require('express')
+const multer = require('multer')
+const upload = multer({dest: 'uploads/'})
+const { getData, getDataById, store, update, destroy } = require('../controller/taskContoller')
+
 
 const router = express.Router()
 
-router.get('/task', (req,res,next) => {
-    res.status(200).json({
-        message: 'Task Berhasil Di Dapat',
-        data: {
-            bab: 'reacjs',
-            subBab: 'State Management Redux'
-        }
-    })
-})
+router.get('/task', getData)
+router.get('/task/:id', getDataById )
+router.post('/task/', upload.single('image_url'), store)
+router.put('/task/:id',upload.single('image_url'), update)
+router.delete('/task/:id',upload.single('image_url'), destroy)
 
-router.get('/task/:bab', (req,res,next) => {
-    const {bab} = req.params
-    res.status(200).send({
-        message: 'Succes status (200)',
-        data: {
-            bab: bab,
-            subBab: `Tentang ${bab}`
-        }
-    })
-})
-router.get('/task/:bab', (req,res,next) => {
-    const {bab} = req.params
-    res.status(200).send({
-        message: 'Succes status (200)',
-        data: {
-            bab: bab,
-            subBab: `Tentang ${bab}`
-        }
-    })
-})
-
-module.exports=router
+module.exports = router
