@@ -1,105 +1,71 @@
-const Task = require('../models/taskModel')
-const path = require('path')
+const { ObjectId } = require('mongodb')
+const Task = require('../models/taskModelv2')
 const fs = require('fs')
-const sequelize = require('../config/sequelize')
+const path = require('path')
 
-const getTask = async (req, res) => {
-    let lookupValue = req.query.search
-    if (lookupValue) {
-        const task = await Task.findAll({
-            where: {
-                bab: sequelize.where(sequelize.fn('LOWER', sequelize.col('bab')), 'LIKE', '%' + lookupValue + '%')
-            }
-        });
-        res.status(200).send({
-            message: "Get Task Success",
-            result: task
-        })
-        // sql: 'SELECT * from task WHERE bab LIKE?',
-        // values: [`%${search}%`]
-    } else {
-        const task = await Task.findAll();
-        res.status(200).send({
-            message: "Get Task Success",
-            result: task
-        })
+const getData = async (req, res) => {
+    let search = req.query.q
+    if (search) {
+        await Task.find({ bab: new RegExp(search, "i") })
+            .then((result) => res.send({
+                message: `Get Data ${search}`,
+                data: result
+            }))
+            .catch(err => res.send(err))
     }
+    await Task.find().exec()
+        .then((result) => res.send({
+            message: 'Get All Data',
+            data: result
+        }))
+        .catch(error => res.send(error))
 }
 
-const getTaskById = async (req, res) => {
-    try {
-        const task = await Task.findAll({
-            where: {
-                id: req.params.id
-            }
-        })
-        res.status(200).send({
-            message: `Get Task By Id `,
-            result: task
-        })
-    } catch (e) {
-        res.send(e)
-    }
+const getById = async (req, res) => {
+    const { id } = req.params
+    Task.findById(id)
+        .then(result => res.send(result))
+        .catch(error => res.send(error))
 }
 
-const createTask = async (req, res) => {
-    const { user_id, bab, sub_bab, end_task } = req.body
-    let image = req.file
+const store = async (req, res) => {
+    const { bab, sub_bab, end_task } = req.body
+    const image = req.file
+
     if (image) {
         const target = path.join(__dirname, '../../uploads', image.originalname)
         fs.renameSync(image.path, target)
-        try {
-            await Task.sync()
-            const result = await Task.create({ user_id, bab, sub_bab, end_task, image_url: `http://localhost:5000/public/${image.originalname}` })
-            res.status(200).send({
-                message: 'Create Task Successfully',
-                result: result
-            })
-        } catch (e) {
-            res.send(e)
-        }
+        await Task.create({ bab, sub_bab, end_task, image_url: `http://localhost:5000/public/${image.originalname}` })
+            .then((result) => res.send({ message: 'Task Create Successfully', data: result }))
+            .catch(err => res.send(err))
     }
-
-
 }
 
 const update = async (req, res) => {
-    const { user_id, bab, sub_bab, end_task } = req.body
-    let image = req.file
+    const { id } = req.params
+    const { bab, sub_bab, end_task } = req.body
+    const image = req.file
+
     if (image) {
         const target = path.join(__dirname, '../../uploads', image.originalname)
         fs.renameSync(image.path, target)
-        try {
-            await Task.sync()
-            const result = await Task.update({ user_id, bab, sub_bab, end_task, image_url: `http://localhost:5000/public/${image.originalname}` }, {
-                where: {
-                    id: req.params.id
-                }
-            })
-            res.status(200).send({
-                message: 'Update Task Successfully',
-                result: result
-            })
-        } catch (e) {
-            res.send(e)
-        }
+        await Task.findByIdAndUpdate({ "_id": id }, { bab, sub_bab, end_task, image_url: `http://localhost:5000/public/${image.originalname}` })
+            .then((result) => res.send({ message: 'Task Update Successfully', data: result }))
+            .catch(err => res.send(err))
     }
+    await Task.findByIdAndUpdate({ "_id": id }, { bab, sub_bab, end_task })
+        .then((result) => res.send({ message: 'Task Update Successfully', data: result }))
+        .catch(err => res.send(err))
 }
 
-const destroy = async (req, res) => {
-    try {
-        const task = await Task.destroy({
-            where: {
-                id: req.params.id
-            }
-        });
-        res.status(200).send({
-            message: `Delete Task Successfully `,
-            result: task
-        })
-    } catch (err) {
-        console.log(err);
-    }
+const destroy = (req, res) => {
+    const { id } = req.params
+    Task.deleteOne({ _id: id })
+        .then((result) => res.send({
+            message: `Delete Successfully`,
+            data: result,
+        }))
+        .catch(error => res.send(error))
 }
 
-module.exports = { getTask, getTaskById, createTask, update, destroy }
+module.exports = { getData, getById, store, destroy, update }

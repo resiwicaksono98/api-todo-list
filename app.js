@@ -1,9 +1,11 @@
+require('./src/config/mongoose')
 const express = require('express')
 const logger = require('morgan')
-const taskRoutes = require('./src/routes/task')
-const taskRoutesv2 = require('./src/routes/taskv2')
+const taskv1 = require('./src/routes/taskv1')
+const taskv2 = require('./src/routes/taskv2')
 const path = require('path')
 const cors = require('cors')
+
 
 
 const app = express()
@@ -12,8 +14,8 @@ app.use(logger('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use('/public', express.static(path.join(__dirname, 'uploads')))
-app.use('/api/v1/', taskRoutes)
-app.use('/api/v2/', taskRoutesv2)
+app.use('/api/v1/', taskv1)
+app.use('/api/v2/', taskv2)
 
 
 app.get('*', (req, res, next) => {

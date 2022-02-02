@@ -1,7 +1,7 @@
 const express = require('express')
 const multer = require('multer')
 const upload = multer({ dest: 'uploads/' })
-const { getData, getById, store, update , destroy} = require('../controller/taskv2Controller')
+const { getData, getById, store, update , destroy} = require('../controller/taskv1Controller')
 
 
 const router = express.Router()
